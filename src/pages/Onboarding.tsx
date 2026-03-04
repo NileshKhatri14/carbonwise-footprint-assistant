@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Leaf, Car, Zap, UtensilsCrossed, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
+import { Leaf, Car, Zap, UtensilsCrossed, ShoppingBag, Plane, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ export default function OnboardingPage() {
     dietType: 'omnivore',
     mealsPerDay: '3',
     shoppingFrequency: 'medium',
+    vacationMode: 'none',
+    vacationDistance: '',
   });
 
   if (!user) {
@@ -32,7 +34,7 @@ export default function OnboardingPage() {
   const steps = [
     {
       icon: Car,
-      title: 'Transportation',
+      title: 'Daily Transportation',
       color: 'gradient-card-blue',
       fields: (
         <div className="space-y-4">
@@ -55,6 +57,40 @@ export default function OnboardingPage() {
             <Label>Monthly Distance (km)</Label>
             <Input type="number" placeholder="e.g. 500" value={form.transportDistance} onChange={e => setForm(f => ({ ...f, transportDistance: e.target.value }))} />
           </div>
+        </div>
+      ),
+    },
+    {
+      icon: Plane,
+      title: 'Vacation Travel',
+      color: 'gradient-card-purple',
+      fields: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Mode of Vacation Travel</Label>
+            <Select value={form.vacationMode} onValueChange={v => setForm(f => ({ ...f, vacationMode: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Vacation Travel</SelectItem>
+                <SelectItem value="flight">Flight ✈️</SelectItem>
+                <SelectItem value="train">Train 🚆</SelectItem>
+                <SelectItem value="bus">Bus 🚌</SelectItem>
+                <SelectItem value="car">Car 🚗</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.vacationMode !== 'none' && (
+            <div className="space-y-2">
+              <Label>Round-trip Distance (km)</Label>
+              <Input type="number" placeholder="e.g. 2000" value={form.vacationDistance} onChange={e => setForm(f => ({ ...f, vacationDistance: e.target.value }))} />
+              <p className="text-xs text-muted-foreground">
+                {form.vacationMode === 'flight' && '✈️ Flights emit ~0.255 kg CO₂/km'}
+                {form.vacationMode === 'train' && '🚆 Trains emit ~0.041 kg CO₂/km'}
+                {form.vacationMode === 'bus' && '🚌 Buses emit ~0.089 kg CO₂/km'}
+                {form.vacationMode === 'car' && '🚗 Cars emit ~0.192 kg CO₂/km'}
+              </p>
+            </div>
+          )}
         </div>
       ),
     },
@@ -100,7 +136,7 @@ export default function OnboardingPage() {
     {
       icon: ShoppingBag,
       title: 'Shopping Behavior',
-      color: 'gradient-card-purple',
+      color: 'gradient-card-blue',
       fields: (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -124,7 +160,6 @@ export default function OnboardingPage() {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      // Save activity and navigate to dashboard
       const activity: Activity = {
         id: crypto.randomUUID(),
         date: new Date().toISOString().split('T')[0],
@@ -134,6 +169,8 @@ export default function OnboardingPage() {
         dietType: form.dietType,
         mealsPerDay: Number(form.mealsPerDay) || 3,
         shoppingFrequency: form.shoppingFrequency,
+        vacationMode: form.vacationMode,
+        vacationDistance: Number(form.vacationDistance) || 0,
       };
       saveActivity(activity);
       const emissionData = calculateEmissions(activity);
@@ -150,7 +187,6 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-6 animate-fade-in">
-        {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Leaf className="w-6 h-6 text-primary" />
@@ -162,14 +198,12 @@ export default function OnboardingPage() {
           <p className="text-primary-foreground/60 text-sm mt-1">Tell us about your lifestyle to calculate your carbon footprint</p>
         </div>
 
-        {/* Progress */}
         <div className="flex gap-2 px-4">
           {steps.map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? 'gradient-primary' : 'bg-primary-foreground/20'}`} />
           ))}
         </div>
 
-        {/* Step Card */}
         <Card className="p-8 shadow-elevated" key={step}>
           <div className="flex items-center gap-3 mb-6">
             <div className={`w-12 h-12 rounded-xl ${current.color} flex items-center justify-center`}>

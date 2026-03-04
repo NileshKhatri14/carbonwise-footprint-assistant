@@ -55,6 +55,8 @@ export function generateSampleData() {
       dietType: diets[Math.floor(Math.random() * diets.length)],
       mealsPerDay: 2 + Math.floor(Math.random() * 2),
       shoppingFrequency: shopping[Math.floor(Math.random() * shopping.length)],
+      vacationMode: 'none',
+      vacationDistance: 0,
     };
     saveActivity(activity);
 

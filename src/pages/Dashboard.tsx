@@ -5,7 +5,6 @@ import { getActivities, getEmissions } from '@/lib/storage';
 import { predictEmissions, generateRecommendations, getEarnedBadges } from '@/lib/carbonEngine';
 import type { Activity as ActivityType, Emission } from '@/lib/carbonEngine';
 import { getCurrentUser, isOnboarded, logout } from '@/lib/auth';
-import ActivityForm from '@/components/ActivityForm';
 import EmissionCharts from '@/components/EmissionCharts';
 import Recommendations from '@/components/Recommendations';
 import Gamification from '@/components/Gamification';
@@ -57,7 +56,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="gradient-hero sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -71,7 +69,6 @@ const Dashboard = () => {
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-primary-foreground/80">
             <a href="#dashboard" className="hover:text-primary-foreground transition-colors">Dashboard</a>
-            <a href="#log" className="hover:text-primary-foreground transition-colors">Log Activity</a>
             <a href="#insights" className="hover:text-primary-foreground transition-colors">AI Insights</a>
             <a href="#recommendations" className="hover:text-primary-foreground transition-colors">Tips</a>
             <Button variant="ghost" size="sm" className="text-primary-foreground/70 hover:text-primary-foreground" onClick={handleLogout}>
@@ -85,7 +82,6 @@ const Dashboard = () => {
         {mobileNav && (
           <nav className="md:hidden px-4 pb-4 flex flex-col gap-2 text-sm text-primary-foreground/80">
             <a href="#dashboard" onClick={() => setMobileNav(false)}>Dashboard</a>
-            <a href="#log" onClick={() => setMobileNav(false)}>Log Activity</a>
             <a href="#insights" onClick={() => setMobileNav(false)}>AI Insights</a>
             <a href="#recommendations" onClick={() => setMobileNav(false)}>Tips</a>
             <button onClick={handleLogout} className="text-left text-primary-foreground/70">Logout</button>
@@ -94,7 +90,6 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-10">
-        {/* Stats */}
         <section id="dashboard" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
             <Card key={i} className={`${stat.gradient} p-5 text-primary-foreground border-0 shadow-elevated animate-fade-in`} style={{ animationDelay: `${i * 80}ms` }}>
@@ -109,10 +104,6 @@ const Dashboard = () => {
         </section>
 
         <EmissionCharts emissions={emissions} predictions={prediction.predictions} />
-
-        <section id="log">
-          <ActivityForm onActivityLogged={reload} />
-        </section>
 
         <section id="insights">
           <AIInsights emissions={emissions} />
