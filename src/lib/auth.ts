@@ -1,7 +1,6 @@
 // Simple localStorage-based auth
 const AUTH_KEY = 'carbonwise_auth';
 const USERS_KEY = 'carbonwise_users';
-const ONBOARDED_KEY = 'carbonwise_onboarded';
 
 export interface AuthUser {
   name: string;
@@ -49,10 +48,16 @@ export function getCurrentUser(): AuthUser | null {
   return data ? JSON.parse(data) : null;
 }
 
+// Per-user onboarding status
 export function isOnboarded(): boolean {
-  return localStorage.getItem(ONBOARDED_KEY) === 'true';
+  const user = getCurrentUser();
+  if (!user) return false;
+  return localStorage.getItem(`carbonwise_onboarded_${user.email}`) === 'true';
 }
 
 export function setOnboarded() {
-  localStorage.setItem(ONBOARDED_KEY, 'true');
+  const user = getCurrentUser();
+  if (user) {
+    localStorage.setItem(`carbonwise_onboarded_${user.email}`, 'true');
+  }
 }

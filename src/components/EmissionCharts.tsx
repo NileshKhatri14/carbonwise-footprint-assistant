@@ -31,15 +31,19 @@ export default function EmissionCharts({ emissions, predictions }: Props) {
 
   const pieData = barData;
 
-  // Trend uses all entries + predictions
+  // Trend uses all user entries + predictions
   const trendData = emissions.map((e, i) => ({
     name: `Entry ${i + 1}`,
     actual: e.totalEmission,
   }));
-  const predData = predictions.map((p, i) => ({
-    name: `Pred ${i + 1}`,
-    predicted: p.value,
-  }));
+
+  // Only show predictions if there are at least 2 data points for meaningful regression
+  const predData = emissions.length >= 2
+    ? predictions.map((p, i) => ({
+        name: `Pred ${i + 1}`,
+        predicted: p.value,
+      }))
+    : [];
   const combinedTrend = [...trendData, ...predData];
 
   return (

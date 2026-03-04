@@ -4,7 +4,7 @@ import { Leaf, Activity, BarChart3, TrendingDown, Menu, X, LogOut } from 'lucide
 import { getActivities, getEmissions } from '@/lib/storage';
 import { predictEmissions, generateRecommendations, getEarnedBadges } from '@/lib/carbonEngine';
 import type { Activity as ActivityType, Emission } from '@/lib/carbonEngine';
-import { getCurrentUser, isOnboarded, logout } from '@/lib/auth';
+import { getCurrentUser, logout } from '@/lib/auth';
 import EmissionCharts from '@/components/EmissionCharts';
 import Recommendations from '@/components/Recommendations';
 import Gamification from '@/components/Gamification';
@@ -24,7 +24,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
-    if (!isOnboarded()) { navigate('/onboarding'); return; }
   }, [user, navigate]);
 
   const reload = useCallback(() => {
