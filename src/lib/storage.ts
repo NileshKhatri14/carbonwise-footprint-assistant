@@ -1,38 +1,47 @@
 import { Activity, Emission, calculateEmissions } from './carbonEngine';
 
-const ACTIVITIES_KEY = 'carbonwise_activities';
-const EMISSIONS_KEY = 'carbonwise_emissions';
-const PROFILE_KEY = 'carbonwise_profile';
+function getUserEmail(): string {
+  const auth = localStorage.getItem('carbonwise_auth');
+  if (auth) {
+    const parsed = JSON.parse(auth);
+    return parsed.email || 'default';
+  }
+  return 'default';
+}
+
+function activitiesKey() { return `carbonwise_activities_${getUserEmail()}`; }
+function emissionsKey() { return `carbonwise_emissions_${getUserEmail()}`; }
+function profileKey() { return `carbonwise_profile_${getUserEmail()}`; }
 
 export function getActivities(): Activity[] {
-  const data = localStorage.getItem(ACTIVITIES_KEY);
+  const data = localStorage.getItem(activitiesKey());
   return data ? JSON.parse(data) : [];
 }
 
 export function saveActivity(activity: Activity) {
   const activities = getActivities();
   activities.push(activity);
-  localStorage.setItem(ACTIVITIES_KEY, JSON.stringify(activities));
+  localStorage.setItem(activitiesKey(), JSON.stringify(activities));
 }
 
 export function getEmissions(): Emission[] {
-  const data = localStorage.getItem(EMISSIONS_KEY);
+  const data = localStorage.getItem(emissionsKey());
   return data ? JSON.parse(data) : [];
 }
 
 export function saveEmission(emission: Emission) {
   const emissions = getEmissions();
   emissions.push(emission);
-  localStorage.setItem(EMISSIONS_KEY, JSON.stringify(emissions));
+  localStorage.setItem(emissionsKey(), JSON.stringify(emissions));
 }
 
 export function getProfile() {
-  const data = localStorage.getItem(PROFILE_KEY);
+  const data = localStorage.getItem(profileKey());
   return data ? JSON.parse(data) : { name: 'User', email: '', points: 0, badges: [], joinedDate: new Date().toISOString() };
 }
 
 export function saveProfile(profile: any) {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  localStorage.setItem(profileKey(), JSON.stringify(profile));
 }
 
 export function generateSampleData() {
