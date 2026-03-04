@@ -24,7 +24,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
-    if (!isOnboarded()) { navigate('/onboarding'); return; }
   }, [user, navigate]);
 
   const reload = useCallback(() => {

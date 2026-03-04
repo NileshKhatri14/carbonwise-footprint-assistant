@@ -33,7 +33,7 @@ export default function LoginPage() {
       const result = login(email.trim(), password);
       if (result.success) {
         toast.success('Welcome back!');
-        navigate('/onboarding');
+        navigate('/welcome-back');
       } else {
         toast.error(result.error);
       }

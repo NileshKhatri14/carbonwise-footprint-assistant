@@ -12,7 +12,7 @@ const Index = () => {
     } else if (!isOnboarded()) {
       navigate('/onboarding');
     } else {
-      navigate('/dashboard');
+      navigate('/welcome-back');
     }
   }, [user, navigate]);
 
