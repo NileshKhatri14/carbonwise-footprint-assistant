@@ -1,4 +1,4 @@
-import { Activity, Emission } from './carbonEngine';
+import { Activity, Emission, calculateEmissions } from './carbonEngine';
 
 const ACTIVITIES_KEY = 'carbonwise_activities';
 const EMISSIONS_KEY = 'carbonwise_emissions';
@@ -35,14 +35,13 @@ export function saveProfile(profile: any) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
-// Generate sample data for demo
 export function generateSampleData() {
   const existing = getActivities();
   if (existing.length > 0) return;
 
   const diets = ['omnivore', 'vegetarian', 'vegan', 'pescatarian'];
   const transports = ['petrol', 'public', 'bicycle', 'diesel'];
-  const shopping = ['low', 'medium', 'high'];
+  const shopping: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high'];
 
   for (let i = 5; i >= 0; i--) {
     const date = new Date();
@@ -59,7 +58,6 @@ export function generateSampleData() {
     };
     saveActivity(activity);
 
-    const { calculateEmissions } = require('./carbonEngine');
     const emissionData = calculateEmissions(activity);
     saveEmission({
       id: crypto.randomUUID(),
