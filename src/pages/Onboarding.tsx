@@ -1,0 +1,202 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Activity, calculateEmissions } from '@/lib/carbonEngine';
+import { saveActivity, saveEmission } from '@/lib/storage';
+import { setOnboarded, getCurrentUser } from '@/lib/auth';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Leaf, Car, Zap, UtensilsCrossed, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
+
+export default function OnboardingPage() {
+  const navigate = useNavigate();
+  const user = getCurrentUser();
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState({
+    transportType: 'petrol',
+    transportDistance: '',
+    energyConsumption: '',
+    dietType: 'omnivore',
+    mealsPerDay: '3',
+    shoppingFrequency: 'medium',
+  });
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const steps = [
+    {
+      icon: Car,
+      title: 'Transportation',
+      color: 'gradient-card-blue',
+      fields: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Vehicle Type</Label>
+            <Select value={form.transportType} onValueChange={v => setForm(f => ({ ...f, transportType: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="petrol">Petrol Car</SelectItem>
+                <SelectItem value="diesel">Diesel Car</SelectItem>
+                <SelectItem value="hybrid">Hybrid</SelectItem>
+                <SelectItem value="electric">Electric</SelectItem>
+                <SelectItem value="public">Public Transport</SelectItem>
+                <SelectItem value="bicycle">Bicycle</SelectItem>
+                <SelectItem value="walk">Walk</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Monthly Distance (km)</Label>
+            <Input type="number" placeholder="e.g. 500" value={form.transportDistance} onChange={e => setForm(f => ({ ...f, transportDistance: e.target.value }))} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      icon: Zap,
+      title: 'Energy Usage',
+      color: 'gradient-card-amber',
+      fields: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Monthly Electricity Usage (kWh)</Label>
+            <Input type="number" placeholder="e.g. 150" value={form.energyConsumption} onChange={e => setForm(f => ({ ...f, energyConsumption: e.target.value }))} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      icon: UtensilsCrossed,
+      title: 'Food Habits',
+      color: 'gradient-card-green',
+      fields: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Diet Type</Label>
+            <Select value={form.dietType} onValueChange={v => setForm(f => ({ ...f, dietType: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="non-vegetarian">Non-Vegetarian</SelectItem>
+                <SelectItem value="omnivore">Omnivore</SelectItem>
+                <SelectItem value="pescatarian">Pescatarian</SelectItem>
+                <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                <SelectItem value="vegan">Vegan</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Meals per Day</Label>
+            <Input type="number" min="1" max="6" value={form.mealsPerDay} onChange={e => setForm(f => ({ ...f, mealsPerDay: e.target.value }))} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      icon: ShoppingBag,
+      title: 'Shopping Behavior',
+      color: 'gradient-card-purple',
+      fields: (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Shopping Frequency</Label>
+            <Select value={form.shoppingFrequency} onValueChange={v => setForm(f => ({ ...f, shoppingFrequency: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="very high">Very High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const handleNext = () => {
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      // Save activity and navigate to dashboard
+      const activity: Activity = {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString().split('T')[0],
+        transportType: form.transportType,
+        transportDistance: Number(form.transportDistance) || 0,
+        energyConsumption: Number(form.energyConsumption) || 0,
+        dietType: form.dietType,
+        mealsPerDay: Number(form.mealsPerDay) || 3,
+        shoppingFrequency: form.shoppingFrequency,
+      };
+      saveActivity(activity);
+      const emissionData = calculateEmissions(activity);
+      saveEmission({ id: crypto.randomUUID(), activityId: activity.id, ...emissionData });
+      setOnboarded();
+      toast.success('Activity logged! Welcome to your dashboard.');
+      navigate('/dashboard');
+    }
+  };
+
+  const current = steps[step];
+  const Icon = current.icon;
+
+  return (
+    <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+      <div className="w-full max-w-lg space-y-6 animate-fade-in">
+        {/* Header */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Leaf className="w-6 h-6 text-primary" />
+            <span className="font-display font-bold text-primary-foreground text-lg">CarbonWise</span>
+          </div>
+          <h1 className="text-2xl font-display font-bold text-primary-foreground">
+            Hi {user.name}! Let's get started 👋
+          </h1>
+          <p className="text-primary-foreground/60 text-sm mt-1">Tell us about your lifestyle to calculate your carbon footprint</p>
+        </div>
+
+        {/* Progress */}
+        <div className="flex gap-2 px-4">
+          {steps.map((_, i) => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i <= step ? 'gradient-primary' : 'bg-primary-foreground/20'}`} />
+          ))}
+        </div>
+
+        {/* Step Card */}
+        <Card className="p-8 shadow-elevated" key={step}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`w-12 h-12 rounded-xl ${current.color} flex items-center justify-center`}>
+              <Icon className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Step {step + 1} of {steps.length}</p>
+              <h2 className="text-xl font-display font-semibold">{current.title}</h2>
+            </div>
+          </div>
+
+          {current.fields}
+
+          <div className="flex justify-between mt-8">
+            {step > 0 ? (
+              <Button variant="outline" onClick={() => setStep(step - 1)}>Back</Button>
+            ) : <div />}
+            <Button onClick={handleNext} className="gradient-primary text-primary-foreground font-semibold gap-2">
+              {step < steps.length - 1 ? (
+                <>Next <ArrowRight className="w-4 h-4" /></>
+              ) : (
+                <>View Dashboard <Sparkles className="w-4 h-4" /></>
+              )}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
