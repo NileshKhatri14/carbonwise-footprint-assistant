@@ -10,6 +10,13 @@ export const EMISSION_FACTORS = {
     bicycle: 0,
     walk: 0,
   },
+  vacation: {
+    flight: 0.255,    // per km
+    train: 0.041,     // per km
+    bus: 0.089,       // per km
+    car: 0.192,       // per km
+    none: 0,
+  },
   energy: 0.475,       // per kWh
   food: {
     'non-vegetarian': 3.0,  // per meal
@@ -36,6 +43,8 @@ export interface Activity {
   dietType: string;
   mealsPerDay: number;
   shoppingFrequency: string;
+  vacationMode: string;
+  vacationDistance: number;
 }
 
 export interface Emission {
@@ -46,6 +55,7 @@ export interface Emission {
   energyEmission: number;
   foodEmission: number;
   shoppingEmission: number;
+  vacationEmission: number;
   totalEmission: number;
 }
 
@@ -68,7 +78,10 @@ export function calculateEmissions(activity: Activity): Omit<Emission, 'id' | 'a
 
   const shoppingEmission = EMISSION_FACTORS.shopping[activity.shoppingFrequency as keyof typeof EMISSION_FACTORS.shopping] || 15;
 
-  const totalEmission = transportEmission + energyEmission + foodEmission + shoppingEmission;
+  const vacationFactor = EMISSION_FACTORS.vacation[activity.vacationMode as keyof typeof EMISSION_FACTORS.vacation] || 0;
+  const vacationEmission = (activity.vacationDistance || 0) * vacationFactor;
+
+  const totalEmission = transportEmission + energyEmission + foodEmission + shoppingEmission + vacationEmission;
 
   return {
     date: activity.date,
@@ -76,6 +89,7 @@ export function calculateEmissions(activity: Activity): Omit<Emission, 'id' | 'a
     energyEmission: Math.round(energyEmission * 100) / 100,
     foodEmission: Math.round(foodEmission * 100) / 100,
     shoppingEmission: Math.round(shoppingEmission * 100) / 100,
+    vacationEmission: Math.round(vacationEmission * 100) / 100,
     totalEmission: Math.round(totalEmission * 100) / 100,
   };
 }
@@ -135,6 +149,7 @@ export function predictEmissions(emissions: Emission[]): {
     { feature: 'Energy', values: emissions.map(e => e.energyEmission) },
     { feature: 'Food', values: emissions.map(e => e.foodEmission) },
     { feature: 'Shopping', values: emissions.map(e => e.shoppingEmission) },
+    { feature: 'Vacation', values: emissions.map(e => e.vacationEmission || 0) },
   ];
 
   const totalMean = y.reduce((a, b) => a + b, 0) / y.length;
