@@ -17,6 +17,7 @@ export default function OnboardingPage() {
   const [userName, setUserName] = useState('User');
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     transportType: 'petrol',
     transportDistance: '',
