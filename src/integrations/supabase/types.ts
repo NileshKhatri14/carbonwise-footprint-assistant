@@ -14,7 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          created_at: string
+          date: string
+          diet_type: string
+          energy_consumption: number
+          id: string
+          meals_per_day: number
+          shopping_frequency: string
+          transport_distance: number
+          transport_type: string
+          user_id: string
+          vacation_distance: number
+          vacation_mode: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          diet_type: string
+          energy_consumption?: number
+          id?: string
+          meals_per_day?: number
+          shopping_frequency?: string
+          transport_distance?: number
+          transport_type: string
+          user_id: string
+          vacation_distance?: number
+          vacation_mode?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          diet_type?: string
+          energy_consumption?: number
+          id?: string
+          meals_per_day?: number
+          shopping_frequency?: string
+          transport_distance?: number
+          transport_type?: string
+          user_id?: string
+          vacation_distance?: number
+          vacation_mode?: string
+        }
+        Relationships: []
+      }
+      emissions: {
+        Row: {
+          activity_id: string
+          created_at: string
+          date: string
+          energy_emission: number
+          food_emission: number
+          id: string
+          shopping_emission: number
+          total_emission: number
+          transport_emission: number
+          user_id: string
+          vacation_emission: number
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          date: string
+          energy_emission?: number
+          food_emission?: number
+          id?: string
+          shopping_emission?: number
+          total_emission?: number
+          transport_emission?: number
+          user_id: string
+          vacation_emission?: number
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          date?: string
+          energy_emission?: number
+          food_emission?: number
+          id?: string
+          shopping_emission?: number
+          total_emission?: number
+          transport_emission?: number
+          user_id?: string
+          vacation_emission?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emissions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          onboarded: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          onboarded?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          onboarded?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
