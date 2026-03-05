@@ -14,8 +14,14 @@ interface StoredUser {
 }
 
 function getUsers(): StoredUser[] {
-  const data = localStorage.getItem(USERS_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(USERS_KEY);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function register(name: string, email: string, password: string): { success: boolean; error?: string } {
