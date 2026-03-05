@@ -16,29 +16,34 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (isRegister) {
-      if (!name.trim()) { toast.error('Name is required'); setLoading(false); return; }
-      const result = register(name.trim(), email.trim(), password);
-      if (result.success) {
-        toast.success('Account created! Let\'s log your first activity.');
-        navigate('/onboarding');
+    try {
+      if (isRegister) {
+        if (!name.trim()) { toast.error('Name is required'); setLoading(false); return; }
+        const result = await register(name.trim(), email.trim(), password);
+        if (result.success) {
+          toast.success("Account created! Let's log your first activity.");
+          navigate('/onboarding');
+        } else {
+          toast.error(result.error);
+        }
       } else {
-        toast.error(result.error);
+        const result = await login(email.trim(), password);
+        if (result.success) {
+          toast.success('Welcome back!');
+          navigate('/welcome-back');
+        } else {
+          toast.error(result.error);
+        }
       }
-    } else {
-      const result = login(email.trim(), password);
-      if (result.success) {
-        toast.success('Welcome back!');
-        navigate('/welcome-back');
-      } else {
-        toast.error(result.error);
-      }
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

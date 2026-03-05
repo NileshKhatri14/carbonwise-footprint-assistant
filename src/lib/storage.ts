@@ -1,79 +1,83 @@
+import { supabase } from '@/integrations/supabase/client';
 import { Activity, Emission, calculateEmissions } from './carbonEngine';
 
-function getUserEmail(): string {
-  const auth = localStorage.getItem('carbonwise_auth');
-  if (auth) {
-    const parsed = JSON.parse(auth);
-    return parsed.email || 'default';
-  }
-  return 'default';
+export async function getActivities(): Promise<Activity[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
+  if (!data) return [];
+  return data.map(row => ({
+    id: row.id,
+    date: row.date,
+    transportType: row.transport_type,
+    transportDistance: Number(row.transport_distance),
+    energyConsumption: Number(row.energy_consumption),
+    dietType: row.diet_type,
+    mealsPerDay: row.meals_per_day,
+    shoppingFrequency: row.shopping_frequency,
+    vacationMode: row.vacation_mode,
+    vacationDistance: Number(row.vacation_distance),
+  }));
 }
 
-function activitiesKey() { return `carbonwise_activities_${getUserEmail()}`; }
-function emissionsKey() { return `carbonwise_emissions_${getUserEmail()}`; }
-function profileKey() { return `carbonwise_profile_${getUserEmail()}`; }
-
-export function getActivities(): Activity[] {
-  const data = localStorage.getItem(activitiesKey());
-  return data ? JSON.parse(data) : [];
+export async function saveActivity(activity: Activity): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase.from('activities').insert({
+    user_id: user.id,
+    date: activity.date,
+    transport_type: activity.transportType,
+    transport_distance: activity.transportDistance,
+    energy_consumption: activity.energyConsumption,
+    diet_type: activity.dietType,
+    meals_per_day: activity.mealsPerDay,
+    shopping_frequency: activity.shoppingFrequency,
+    vacation_mode: activity.vacationMode,
+    vacation_distance: activity.vacationDistance,
+  }).select('id').single();
+  if (error) { console.error('saveActivity error:', error); return null; }
+  return data?.id || null;
 }
 
-export function saveActivity(activity: Activity) {
-  const activities = getActivities();
-  activities.push(activity);
-  localStorage.setItem(activitiesKey(), JSON.stringify(activities));
+export async function getEmissions(): Promise<Emission[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from('emissions')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
+  if (!data) return [];
+  return data.map(row => ({
+    id: row.id,
+    activityId: row.activity_id,
+    date: row.date,
+    transportEmission: Number(row.transport_emission),
+    energyEmission: Number(row.energy_emission),
+    foodEmission: Number(row.food_emission),
+    shoppingEmission: Number(row.shopping_emission),
+    vacationEmission: Number(row.vacation_emission),
+    totalEmission: Number(row.total_emission),
+  }));
 }
 
-export function getEmissions(): Emission[] {
-  const data = localStorage.getItem(emissionsKey());
-  return data ? JSON.parse(data) : [];
-}
-
-export function saveEmission(emission: Emission) {
-  const emissions = getEmissions();
-  emissions.push(emission);
-  localStorage.setItem(emissionsKey(), JSON.stringify(emissions));
-}
-
-export function getProfile() {
-  const data = localStorage.getItem(profileKey());
-  return data ? JSON.parse(data) : { name: 'User', email: '', points: 0, badges: [], joinedDate: new Date().toISOString() };
-}
-
-export function saveProfile(profile: any) {
-  localStorage.setItem(profileKey(), JSON.stringify(profile));
-}
-
-export function generateSampleData() {
-  const existing = getActivities();
-  if (existing.length > 0) return;
-
-  const diets = ['omnivore', 'vegetarian', 'vegan', 'pescatarian'];
-  const transports = ['petrol', 'public', 'bicycle', 'diesel'];
-  const shopping: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high'];
-
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const activity: Activity = {
-      id: crypto.randomUUID(),
-      date: date.toISOString().split('T')[0],
-      transportType: transports[Math.floor(Math.random() * transports.length)],
-      transportDistance: Math.round(200 + Math.random() * 2000),
-      energyConsumption: Math.round(50 + Math.random() * 200),
-      dietType: diets[Math.floor(Math.random() * diets.length)],
-      mealsPerDay: 2 + Math.floor(Math.random() * 2),
-      shoppingFrequency: shopping[Math.floor(Math.random() * shopping.length)],
-      vacationMode: 'none',
-      vacationDistance: 0,
-    };
-    saveActivity(activity);
-
-    const emissionData = calculateEmissions(activity);
-    saveEmission({
-      id: crypto.randomUUID(),
-      activityId: activity.id,
-      ...emissionData,
-    });
-  }
+export async function saveEmission(emission: Omit<Emission, 'id'> & { activityId: string }) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from('emissions').insert({
+    user_id: user.id,
+    activity_id: emission.activityId,
+    date: emission.date,
+    transport_emission: emission.transportEmission,
+    energy_emission: emission.energyEmission,
+    food_emission: emission.foodEmission,
+    shopping_emission: emission.shoppingEmission,
+    vacation_emission: emission.vacationEmission,
+    total_emission: emission.totalEmission,
+  });
+  if (error) console.error('saveEmission error:', error);
 }
