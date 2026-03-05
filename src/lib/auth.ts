@@ -25,19 +25,22 @@ function getUsers(): StoredUser[] {
 }
 
 export function register(name: string, email: string, password: string): { success: boolean; error?: string } {
+  const normalizedEmail = email.toLowerCase().trim();
   const users = getUsers();
-  if (users.find(u => u.email === email)) {
+  if (users.find(u => u.email.toLowerCase() === normalizedEmail)) {
     return { success: false, error: 'Email already registered' };
   }
-  users.push({ name, email, password });
+  users.push({ name, email: normalizedEmail, password });
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ name, email }));
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ name, email: normalizedEmail }));
   return { success: true };
 }
 
 export function login(email: string, password: string): { success: boolean; error?: string } {
+  const normalizedEmail = email.toLowerCase().trim();
   const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
+  console.log('Login attempt for:', normalizedEmail, 'Users in DB:', users.length);
+  const user = users.find(u => u.email.toLowerCase() === normalizedEmail && u.password === password);
   if (!user) {
     return { success: false, error: 'Invalid email or password' };
   }
