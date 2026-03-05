@@ -4,7 +4,8 @@ import { Leaf, Activity, BarChart3, TrendingDown, Menu, X, LogOut } from 'lucide
 import { getActivities, getEmissions } from '@/lib/storage';
 import { predictEmissions, generateRecommendations, getEarnedBadges } from '@/lib/carbonEngine';
 import type { Activity as ActivityType, Emission } from '@/lib/carbonEngine';
-import { getCurrentUser, logout } from '@/lib/auth';
+import { logout } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
 import EmissionCharts from '@/components/EmissionCharts';
 import Recommendations from '@/components/Recommendations';
 import Gamification from '@/components/Gamification';
@@ -19,27 +20,34 @@ const Dashboard = () => {
   const [activities, setActivities] = useState<ActivityType[]>([]);
   const [emissions, setEmissions] = useState<Emission[]>([]);
   const [mobileNav, setMobileNav] = useState(false);
-
-  const user = getCurrentUser();
+  const [userName, setUserName] = useState('User');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-  }, [user, navigate]);
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate('/login'); return; }
+      setUserName(user.user_metadata?.display_name || user.email || 'User');
+      setLoading(false);
+    };
+    check();
+  }, [navigate]);
 
-  const reload = useCallback(() => {
-    setActivities(getActivities());
-    setEmissions(getEmissions());
+  const reload = useCallback(async () => {
+    const [acts, ems] = await Promise.all([getActivities(), getEmissions()]);
+    setActivities(acts);
+    setEmissions(ems);
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => { if (!loading) reload(); }, [reload, loading]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     toast.success('Logged out successfully');
     navigate('/login');
   };
 
-  if (!user) return null;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   const prediction = predictEmissions(emissions);
   const recommendations = generateRecommendations(emissions);
@@ -63,7 +71,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-xl font-display font-bold text-primary-foreground tracking-tight">CarbonWise</h1>
-              <p className="text-xs text-primary-foreground/60">Welcome, {user.name}</p>
+              <p className="text-xs text-primary-foreground/60">Welcome, {userName}</p>
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-primary-foreground/80">

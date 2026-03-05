@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, calculateEmissions } from '@/lib/carbonEngine';
+import { calculateEmissions } from '@/lib/carbonEngine';
 import { saveActivity, saveEmission } from '@/lib/storage';
-import { setOnboarded, getCurrentUser } from '@/lib/auth';
+import { setOnboarded } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,8 @@ import { Leaf, Car, Zap, UtensilsCrossed, ShoppingBag, Plane, ArrowRight, Sparkl
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const [userName, setUserName] = useState('User');
+  const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     transportType: 'petrol',
@@ -26,10 +28,17 @@ export default function OnboardingPage() {
     vacationDistance: '',
   });
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  useEffect(() => {
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate('/login'); return; }
+      setUserName(user.user_metadata?.display_name || user.email || 'User');
+      setLoading(false);
+    };
+    check();
+  }, [navigate]);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   const steps = [
     {
@@ -83,12 +92,6 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label>Round-trip Distance (km)</Label>
               <Input type="number" placeholder="e.g. 2000" value={form.vacationDistance} onChange={e => setForm(f => ({ ...f, vacationDistance: e.target.value }))} />
-              <p className="text-xs text-muted-foreground">
-                {form.vacationMode === 'flight' && '✈️ Flights emit ~0.255 kg CO₂/km'}
-                {form.vacationMode === 'train' && '🚆 Trains emit ~0.041 kg CO₂/km'}
-                {form.vacationMode === 'bus' && '🚌 Buses emit ~0.089 kg CO₂/km'}
-                {form.vacationMode === 'car' && '🚗 Cars emit ~0.192 kg CO₂/km'}
-              </p>
             </div>
           )}
         </div>
@@ -156,11 +159,11 @@ export default function OnboardingPage() {
     },
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      const activity: Activity = {
+      const activity = {
         id: crypto.randomUUID(),
         date: new Date().toISOString().split('T')[0],
         transportType: form.transportType,
@@ -172,10 +175,12 @@ export default function OnboardingPage() {
         vacationMode: form.vacationMode,
         vacationDistance: Number(form.vacationDistance) || 0,
       };
-      saveActivity(activity);
-      const emissionData = calculateEmissions(activity);
-      saveEmission({ id: crypto.randomUUID(), activityId: activity.id, ...emissionData });
-      setOnboarded();
+      const activityId = await saveActivity(activity);
+      if (activityId) {
+        const emissionData = calculateEmissions(activity);
+        await saveEmission({ activityId, ...emissionData });
+      }
+      await setOnboarded();
       toast.success('Activity logged! Welcome to your dashboard.');
       navigate('/dashboard');
     }
@@ -193,7 +198,7 @@ export default function OnboardingPage() {
             <span className="font-display font-bold text-primary-foreground text-lg">CarbonWise</span>
           </div>
           <h1 className="text-2xl font-display font-bold text-primary-foreground">
-            Hi {user.name}! Let's get started 👋
+            Hi {userName}! Let's get started 👋
           </h1>
           <p className="text-primary-foreground/60 text-sm mt-1">Tell us about your lifestyle to calculate your carbon footprint</p>
         </div>
