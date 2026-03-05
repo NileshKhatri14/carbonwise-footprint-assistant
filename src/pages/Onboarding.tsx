@@ -164,6 +164,8 @@ export default function OnboardingPage() {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
+      if (submitting) return;
+      setSubmitting(true);
       const activity = {
         id: crypto.randomUUID(),
         date: new Date().toISOString().split('T')[0],
