@@ -50,8 +50,15 @@ export function logout() {
 }
 
 export function getCurrentUser(): AuthUser | null {
-  const data = localStorage.getItem(AUTH_KEY);
-  return data ? JSON.parse(data) : null;
+  try {
+    const data = localStorage.getItem(AUTH_KEY);
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    if (parsed && parsed.name && parsed.email) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 // Per-user onboarding status
