@@ -180,15 +180,19 @@ export default function OnboardingPage() {
           vacationDistance: Number(form.vacationDistance) || 0,
         };
         const activityId = await saveActivity(activity);
+        console.log('saveActivity result:', activityId);
         if (activityId) {
           const emissionData = calculateEmissions(activity);
+          console.log('emissionData:', emissionData);
           await saveEmission({ activityId, ...emissionData });
+          console.log('saveEmission done');
         }
         await setOnboarded();
+        console.log('setOnboarded done');
         toast.success('Activity logged! Welcome to your dashboard.');
-      } catch (err) {
-        console.error('Onboarding submission error:', err);
-        toast.error('Something went wrong, but redirecting to dashboard.');
+      } catch (err: any) {
+        console.error('Onboarding submission error:', err?.message || err);
+        toast.error(`Error: ${err?.message || 'Unknown error'}. Redirecting to dashboard.`);
       } finally {
         navigate('/dashboard');
       }
