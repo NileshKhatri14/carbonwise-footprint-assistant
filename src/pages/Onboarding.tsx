@@ -166,26 +166,32 @@ export default function OnboardingPage() {
     } else {
       if (submitting) return;
       setSubmitting(true);
-      const activity = {
-        id: crypto.randomUUID(),
-        date: new Date().toISOString().split('T')[0],
-        transportType: form.transportType,
-        transportDistance: Number(form.transportDistance) || 0,
-        energyConsumption: Number(form.energyConsumption) || 0,
-        dietType: form.dietType,
-        mealsPerDay: Number(form.mealsPerDay) || 3,
-        shoppingFrequency: form.shoppingFrequency,
-        vacationMode: form.vacationMode,
-        vacationDistance: Number(form.vacationDistance) || 0,
-      };
-      const activityId = await saveActivity(activity);
-      if (activityId) {
-        const emissionData = calculateEmissions(activity);
-        await saveEmission({ activityId, ...emissionData });
+      try {
+        const activity = {
+          id: crypto.randomUUID(),
+          date: new Date().toISOString().split('T')[0],
+          transportType: form.transportType,
+          transportDistance: Number(form.transportDistance) || 0,
+          energyConsumption: Number(form.energyConsumption) || 0,
+          dietType: form.dietType,
+          mealsPerDay: Number(form.mealsPerDay) || 3,
+          shoppingFrequency: form.shoppingFrequency,
+          vacationMode: form.vacationMode,
+          vacationDistance: Number(form.vacationDistance) || 0,
+        };
+        const activityId = await saveActivity(activity);
+        if (activityId) {
+          const emissionData = calculateEmissions(activity);
+          await saveEmission({ activityId, ...emissionData });
+        }
+        await setOnboarded();
+        toast.success('Activity logged! Welcome to your dashboard.');
+      } catch (err) {
+        console.error('Onboarding submission error:', err);
+        toast.error('Something went wrong, but redirecting to dashboard.');
+      } finally {
+        navigate('/dashboard');
       }
-      await setOnboarded();
-      toast.success('Activity logged! Welcome to your dashboard.');
-      navigate('/dashboard');
     }
   };
 
