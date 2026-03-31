@@ -168,7 +168,6 @@ export default function OnboardingPage() {
       setSubmitting(true);
       try {
         const activity = {
-          id: crypto.randomUUID(),
           date: new Date().toISOString().split('T')[0],
           transportType: form.transportType,
           transportDistance: Number(form.transportDistance) || 0,
