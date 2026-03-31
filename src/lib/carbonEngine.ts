@@ -35,7 +35,7 @@ export const EMISSION_FACTORS = {
 } as const;
 
 export interface Activity {
-  id: string;
+  id?: string;
   date: string;
   transportType: string;
   transportDistance: number;
